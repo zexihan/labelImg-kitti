@@ -7,6 +7,7 @@ LabelImg with KITTI BEV Rotation
 .. image:: https://img.shields.io/travis/tzutalin/labelImg.svg
         :target: https://travis-ci.org/tzutalin/labelImg
 
+
 This repo adds full support for rotated rectangle annotation with KITTI BEV format output.
 
 .. image:: https://raw.githubusercontent.com/zexihan/labelImg-kitti/master/demo/rotation.png
@@ -16,7 +17,7 @@ This repo adds full support for rotated rectangle annotation with KITTI BEV form
 
 .. code:: shell
 
-    0 172.000000 212.500000 96.356169 59.048844 4.175951 // type x y w h rotation [0..2*pi]
+    0 172.000000 212.500000 96.356169 59.048844 4.175951 // type x y w h rotation-[0..2*pi]-clockwise
 
 LabelImg
 ------------------
