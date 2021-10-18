@@ -1,1 +1,14 @@
-person
+So_the
+Ho_ten
+Ngay_sinh
+Gioi_tinh
+Quoc_tich
+Que_quan
+Thuong_tru
+Han_su_dung
+Dan_toc
+Ton_giao
+Dac_diem
+Ngay_cap
+Noi_cap
+So_ho_chieu
