@@ -66,6 +66,8 @@ class Shape(object):
 
         self.rotation = 0
 
+        self.content = ''
+
         if line_color is not None:
             # Override the class line_color attribute
             # with an object attribute. Currently this

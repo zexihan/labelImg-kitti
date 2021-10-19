@@ -52,8 +52,9 @@ class LabelFile(object):
             rotation = shape['rotation']
             # Add Chris
             difficult = int(shape['difficult'])
+            content = shape['content']
             bndbox = LabelFile.convertPoints2BndBox(points)
-            writer.addBndBox(bndbox[0], bndbox[1], bndbox[2], bndbox[3], rotation, label, difficult)
+            writer.addBndBox(bndbox[0], bndbox[1], bndbox[2], bndbox[3], rotation, label, difficult, content)
 
         writer.save(targetFile=filename, classList=classList)
         return

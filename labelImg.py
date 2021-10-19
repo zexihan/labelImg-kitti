@@ -771,7 +771,7 @@ class MainWindow(QMainWindow, WindowMixin):
         s = []
         for i in range(len(shapes)):
             if self.usingKittiFormat:
-                label, points, rotation, line_color, fill_color, difficult = shapes[i]
+                label, points, rotation, line_color, fill_color, difficult, content = shapes[i]
             else:
                 label, points, line_color, fill_color, difficult = shapes[i]
             shape = Shape(label=label)
@@ -785,6 +785,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 shape.addPoint(QPointF(x, y))
             if self.usingKittiFormat:
                 shape.rotation = rotation
+                shape.content = content
             shape.difficult = difficult
             shape.close()
             s.append(shape)
@@ -827,7 +828,8 @@ class MainWindow(QMainWindow, WindowMixin):
                         rotation=s.rotation,
                         points=[(p.x(), p.y()) for p in s.points],
                        # add chris
-                        difficult = s.difficult)
+                        difficult = s.difficult,
+                        content = s.content)
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
         # Can add differrent annotation formats here

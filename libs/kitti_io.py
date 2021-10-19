@@ -10,6 +10,8 @@ import numpy as np
 from math import acos, cos, sin, pi, sqrt
 from libs.constants import DEFAULT_ENCODING
 
+import urllib.parse
+
 TXT_EXT = '.txt'
 ENCODE_METHOD = DEFAULT_ENCODING
 
@@ -24,11 +26,12 @@ class KITTIWriter:
         self.localImgPath = localImgPath
         self.verified = False
 
-    def addBndBox(self, xmin, ymin, xmax, ymax, rotation, name, difficult):
+    def addBndBox(self, xmin, ymin, xmax, ymax, rotation, name, difficult, content):
         # bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
         bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax, 'rotation': rotation}
         bndbox['name'] = name
         bndbox['difficult'] = difficult
+        bndbox['content'] = content
         self.boxlist.append(bndbox)
 
     def BndBox2KittiLine(self, box, classList=[]):
@@ -37,6 +40,7 @@ class KITTIWriter:
         ymin = box['ymin']
         ymax = box['ymax']
         rotation = box['rotation']
+        content = box['content']
 
         cosval = abs(cos(rotation))
         sinval = abs(sin(rotation))
@@ -59,7 +63,9 @@ class KITTIWriter:
 
         classIndex = classList.index(boxName)
 
-        return classIndex, xcen, ycen, w, h, rotation
+        content = urllib.parse.quote(content)
+
+        return classIndex, xcen, ycen, w, h, rotation, content
 
     def save(self, classList=[], targetFile=None):
 
@@ -79,9 +85,9 @@ class KITTIWriter:
 
 
         for box in self.boxlist:
-            classIndex, xcen, ycen, w, h, rotation = self.BndBox2KittiLine(box, classList)
+            classIndex, xcen, ycen, w, h, rotation, content = self.BndBox2KittiLine(box, classList)
             # print (classIndex, xcen, ycen, w, h)
-            out_file.write("%d %.6f %.6f %.6f %.6f %.6f\n" % (classIndex, xcen, ycen, w, h, rotation))
+            out_file.write("%d %.6f %.6f %.6f %.6f %.6f %s\n" % (classIndex, xcen, ycen, w, h, rotation, content))
 
         # print (classList)
         # print (out_class_file)
@@ -128,12 +134,12 @@ class KittiReader:
     def getShapes(self):
         return self.shapes
 
-    def addShape(self, label, xmin, ymin, xmax, ymax, rotation, difficult):
+    def addShape(self, label, xmin, ymin, xmax, ymax, rotation, difficult, content):
 
         points = [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)]
-        self.shapes.append((label, points, rotation, None, None, difficult))
+        self.shapes.append((label, points, rotation, None, None, difficult, content))
 
-    def kittiLine2Shape(self, classIndex, xcen, ycen, w, h, rotation):
+    def kittiLine2Shape(self, classIndex, xcen, ycen, w, h, rotation, content):
         label = self.classes[int(classIndex)]
 
         xmin = max(float(xcen) - float(w) / 2, 0)
@@ -143,13 +149,21 @@ class KittiReader:
 
         rotation = float(rotation)
 
-        return label, xmin, ymin, xmax, ymax, rotation
+        context = urllib.parse.unquote(content)
+
+        return label, xmin, ymin, xmax, ymax, rotation, content
 
     def parseYoloFormat(self):
         bndBoxFile = open(self.filepath, 'r')
         for bndBox in bndBoxFile:
-            classIndex, xcen, ycen, w, h, rotation = bndBox.split(' ')
-            label, xmin, ymin, xmax, ymax, rotation = self.kittiLine2Shape(classIndex, xcen, ycen, w, h, rotation)
+            data = bndBox.split(' ')
+            if len(data) == 6:
+                classIndex, xcen, ycen, w, h, rotation = data
+                content = ''
+            elif len(data) == 7:
+                classIndex, xcen, ycen, w, h, rotation, content = data
+                
+            label, xmin, ymin, xmax, ymax, rotation, content = self.kittiLine2Shape(classIndex, xcen, ycen, w, h, rotation, content)
 
             # Caveat: difficult flag is discarded when saved as yolo format.
-            self.addShape(label, xmin, ymin, xmax, ymax, rotation, False)
+            self.addShape(label, xmin, ymin, xmax, ymax, rotation, False, content)
