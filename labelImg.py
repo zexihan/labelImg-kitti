@@ -152,9 +152,22 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelList.itemDoubleClicked.connect(self.editLabel)
         # Connect to itemChanged to detect checkbox changes.
         self.labelList.itemChanged.connect(self.labelItemChanged)
-        listLayout.addWidget(self.labelList)
 
-        
+        self.contentList = QListWidget()
+        self.contentList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.contentList.verticalScrollBar().setDisabled(True)
+        self.contentList.itemChanged.connect(self.contentItemChanged)
+
+        labelContentLayout = QHBoxLayout()
+        labelContentLayout.addWidget(self.labelList)
+        labelContentLayout.addWidget(self.contentList)
+        labelContentContainer = QSplitter()
+        labelContentContainer.setLayout(labelContentLayout)
+
+        self.labelList.verticalScrollBar().valueChanged.connect(lambda value: self.contentList.verticalScrollBar().setValue(value))
+        self.labelList.currentRowChanged.connect(lambda value: self.contentList.setCurrentRow(value))
+
+        listLayout.addWidget(labelContentContainer)
 
         self.dock = QDockWidget(getStr('boxLabelText'), self)
         self.dock.setObjectName(getStr('labels'))
@@ -588,6 +601,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.itemsToShapes.clear()
         self.shapesToItems.clear()
         self.labelList.clear()
+        self.contentList.clear()
         self.filePath = None
         self.imageData = None
         self.labelFile = None
@@ -753,6 +767,11 @@ class MainWindow(QMainWindow, WindowMixin):
         self.itemsToShapes[item] = shape
         self.shapesToItems[shape] = item
         self.labelList.addItem(item)
+
+        contentItem = QListWidgetItem(shape.content)
+        contentItem.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+        self.contentList.addItem(contentItem)
+
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
         self.updateComboBox()
@@ -763,6 +782,7 @@ class MainWindow(QMainWindow, WindowMixin):
             return
         item = self.shapesToItems[shape]
         self.labelList.takeItem(self.labelList.row(item))
+        self.contentList.takeItem(self.labelList.row(item))
         del self.shapesToItems[shape]
         del self.itemsToShapes[item]
         self.updateComboBox()
@@ -892,6 +912,16 @@ class MainWindow(QMainWindow, WindowMixin):
         else:  # User probably changed item visibility
             self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
 
+    def contentItemChanged(self, item):
+        row = self.contentList.row(item)
+        labelItem = self.labelList.item(row)
+
+        shape = self.itemsToShapes[labelItem]
+        content = item.text()
+        if content != shape.content:
+            shape.content = item.text()
+            self.setDirty()
+  
     # Callback functions:
     def newShape(self):
         """Pop-up and give focus to the label editor.

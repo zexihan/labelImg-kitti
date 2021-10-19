@@ -149,13 +149,14 @@ class KittiReader:
 
         rotation = float(rotation)
 
-        context = urllib.parse.unquote(content)
+        content = urllib.parse.unquote(content)
 
         return label, xmin, ymin, xmax, ymax, rotation, content
 
     def parseYoloFormat(self):
         bndBoxFile = open(self.filepath, 'r')
         for bndBox in bndBoxFile:
+            bndBox = bndBox.strip()
             data = bndBox.split(' ')
             if len(data) == 6:
                 classIndex, xcen, ycen, w, h, rotation = data
