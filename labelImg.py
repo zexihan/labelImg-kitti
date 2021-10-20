@@ -156,6 +156,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.contentList = QListWidget()
         self.contentList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.contentList.verticalScrollBar().setDisabled(True)
+        self.contentList.setEditTriggers(QAbstractItemView.CurrentChanged)
         self.contentList.itemChanged.connect(self.contentItemChanged)
 
         labelContentLayout = QHBoxLayout()
