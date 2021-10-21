@@ -167,6 +167,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.labelList.verticalScrollBar().valueChanged.connect(lambda value: self.contentList.verticalScrollBar().setValue(value))
         self.labelList.currentRowChanged.connect(lambda value: self.contentList.setCurrentRow(value))
+        self.contentList.currentRowChanged.connect(lambda value: self.labelList.setCurrentRow(value))
 
         listLayout.addWidget(labelContentContainer)
 
