@@ -1061,9 +1061,11 @@ class MainWindow(QMainWindow, WindowMixin):
         unicodeFilePath = os.path.abspath(unicodeFilePath)
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
+        currentRow = 0
         if unicodeFilePath and self.fileListWidget.count() > 0:
             if unicodeFilePath in self.mImgList:
                 index = self.mImgList.index(unicodeFilePath)
+                currentRow = index
                 fileWidgetItem = self.fileListWidget.item(index)
                 fileWidgetItem.setSelected(True)
             else:
@@ -1138,7 +1140,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 elif os.path.isfile(txtPath):
                     self.loadYOLOTXTByFilename(txtPath)
 
-            self.setWindowTitle(__appname__ + ' ' + filePath)
+            self.setWindowTitle(f"{__appname__} {filePath} {currentRow}/{len(self.mImgList)}")
 
             # Default : select last item if there is at least one item
             if self.labelList.count():
