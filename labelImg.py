@@ -1048,6 +1048,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def loadFile(self, filePath=None):
         """Load the specified file, or the last opened file if None."""
+        print(filePath)
         self.resetState()
         self.canvas.setEnabled(False)
         if filePath is None:
@@ -1365,7 +1366,6 @@ class MainWindow(QMainWindow, WindowMixin):
             currIndex = self.mImgList.index(self.filePath)
             if currIndex + 1 < len(self.mImgList):
                 filename = self.mImgList[currIndex + 1]
-
         if filename:
             self.loadFile(filename)
 
@@ -1515,7 +1515,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_KITTI)
         tKittiParseReader = KittiReader(txtPath, self.image)
         shapes = tKittiParseReader.getShapes()
-        print (shapes)
         self.loadLabels(shapes)
         self.canvas.verified = tKittiParseReader.verified
     
@@ -1541,7 +1540,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_YOLO)
         tYoloParseReader = YoloReader(txtPath, self.image)
         shapes = tYoloParseReader.getShapes()
-        print (shapes)
         self.loadLabels(shapes)
         self.canvas.verified = tYoloParseReader.verified
 

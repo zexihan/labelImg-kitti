@@ -1164,7 +1164,7 @@ class Canvas(QWidget):
             ro_y = cen_y - 10
             new_x = (ro_x - cen_x) * cosval - (ro_y - cen_y) * sinval + cen_x
             new_y = (ro_x - cen_x) * sinval + (ro_y - cen_y) * cosval + cen_y
-            print(shape_center.x())
+            # print(shape_center.x())
             self.rotateShape(QPointF(new_x, new_y), shape)
         self.current = None
         self.repaint()
