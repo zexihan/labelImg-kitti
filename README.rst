@@ -1,4 +1,4 @@
-LabelImg with KITTI BEV Rotation
+LabelImg with OCR 
 ========
 
 .. image:: https://img.shields.io/pypi/v/labelimg.svg
@@ -8,16 +8,16 @@ LabelImg with KITTI BEV Rotation
         :target: https://travis-ci.org/tzutalin/labelImg
 
 
-This repo adds full support for rotated rectangle annotation with KITTI BEV format output.
+This repo adds full support for rotated rectangle annotation with OCR format output.
 
-.. image:: https://raw.githubusercontent.com/zexihan/labelImg-kitti/master/demo/rotation.png
+.. image:: https://raw.githubusercontent.com/khiemauto/labelImg-kitti-ocr/master/demo/rotation.png
      :alt: Demo Image
 
-!!!New KITTI BEV format output:
+!!!New OCR format output:
 
 .. code:: shell
 
-    0 172.000000 212.500000 96.356169 59.048844 4.175951 // type x y w h rotation-[0..2*pi]-clockwise
+    0 172.000000 212.500000 96.356169 59.048844 4.175951 Test%20Name // type x y w h rotation-[0..2*pi]-clockwise ocr-[url encode]
 
 LabelImg
 ------------------

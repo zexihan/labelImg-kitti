@@ -152,9 +152,24 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelList.itemDoubleClicked.connect(self.editLabel)
         # Connect to itemChanged to detect checkbox changes.
         self.labelList.itemChanged.connect(self.labelItemChanged)
-        listLayout.addWidget(self.labelList)
 
-        
+        self.contentList = QListWidget()
+        self.contentList.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.contentList.verticalScrollBar().setDisabled(True)
+        self.contentList.setEditTriggers(QAbstractItemView.CurrentChanged)
+        self.contentList.itemChanged.connect(self.contentItemChanged)
+
+        labelContentLayout = QHBoxLayout()
+        labelContentLayout.addWidget(self.labelList)
+        labelContentLayout.addWidget(self.contentList)
+        labelContentContainer = QSplitter()
+        labelContentContainer.setLayout(labelContentLayout)
+
+        self.labelList.verticalScrollBar().valueChanged.connect(lambda value: self.contentList.verticalScrollBar().setValue(value))
+        self.labelList.currentRowChanged.connect(lambda value: self.contentList.setCurrentRow(value))
+        self.contentList.currentRowChanged.connect(lambda value: self.labelList.setCurrentRow(value))
+
+        listLayout.addWidget(labelContentContainer)
 
         self.dock = QDockWidget(getStr('boxLabelText'), self)
         self.dock.setObjectName(getStr('labels'))
@@ -588,6 +603,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.itemsToShapes.clear()
         self.shapesToItems.clear()
         self.labelList.clear()
+        self.contentList.clear()
         self.filePath = None
         self.imageData = None
         self.labelFile = None
@@ -753,6 +769,11 @@ class MainWindow(QMainWindow, WindowMixin):
         self.itemsToShapes[item] = shape
         self.shapesToItems[shape] = item
         self.labelList.addItem(item)
+
+        contentItem = QListWidgetItem(shape.content)
+        contentItem.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+        self.contentList.addItem(contentItem)
+
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
         self.updateComboBox()
@@ -763,6 +784,7 @@ class MainWindow(QMainWindow, WindowMixin):
             return
         item = self.shapesToItems[shape]
         self.labelList.takeItem(self.labelList.row(item))
+        self.contentList.takeItem(self.labelList.row(item))
         del self.shapesToItems[shape]
         del self.itemsToShapes[item]
         self.updateComboBox()
@@ -771,7 +793,7 @@ class MainWindow(QMainWindow, WindowMixin):
         s = []
         for i in range(len(shapes)):
             if self.usingKittiFormat:
-                label, points, rotation, line_color, fill_color, difficult = shapes[i]
+                label, points, rotation, line_color, fill_color, difficult, content = shapes[i]
             else:
                 label, points, line_color, fill_color, difficult = shapes[i]
             shape = Shape(label=label)
@@ -785,6 +807,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 shape.addPoint(QPointF(x, y))
             if self.usingKittiFormat:
                 shape.rotation = rotation
+                shape.content = content
             shape.difficult = difficult
             shape.close()
             s.append(shape)
@@ -827,7 +850,8 @@ class MainWindow(QMainWindow, WindowMixin):
                         rotation=s.rotation,
                         points=[(p.x(), p.y()) for p in s.points],
                        # add chris
-                        difficult = s.difficult)
+                        difficult = s.difficult,
+                        content = s.content)
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
         # Can add differrent annotation formats here
@@ -890,6 +914,16 @@ class MainWindow(QMainWindow, WindowMixin):
         else:  # User probably changed item visibility
             self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
 
+    def contentItemChanged(self, item):
+        row = self.contentList.row(item)
+        labelItem = self.labelList.item(row)
+
+        shape = self.itemsToShapes[labelItem]
+        content = item.text()
+        if content != shape.content:
+            shape.content = item.text()
+            self.setDirty()
+  
     # Callback functions:
     def newShape(self):
         """Pop-up and give focus to the label editor.
@@ -933,13 +967,13 @@ class MainWindow(QMainWindow, WindowMixin):
     def scrollRequest(self, delta, orientation):
         units = - delta / (8 * 15)
         bar = self.scrollBars[orientation]
-        bar.setValue(bar.value() + bar.singleStep() * units)
+        bar.setValue(int(bar.value() + bar.singleStep() * units))
 
     def setZoom(self, value):
         self.actions.fitWidth.setChecked(False)
         self.actions.fitWindow.setChecked(False)
         self.zoomMode = self.MANUAL_ZOOM
-        self.zoomWidget.setValue(value)
+        self.zoomWidget.setValue(int(value))
 
     def addZoom(self, increment=10):
         self.setZoom(self.zoomWidget.value() + increment)
@@ -993,8 +1027,8 @@ class MainWindow(QMainWindow, WindowMixin):
         new_h_bar_value = h_bar.value() + move_x * d_h_bar_max
         new_v_bar_value = v_bar.value() + move_y * d_v_bar_max
 
-        h_bar.setValue(new_h_bar_value)
-        v_bar.setValue(new_v_bar_value)
+        h_bar.setValue(int(new_h_bar_value))
+        v_bar.setValue(int(new_v_bar_value))
 
     def setFitWindow(self, value=True):
         if value:
@@ -1014,6 +1048,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def loadFile(self, filePath=None):
         """Load the specified file, or the last opened file if None."""
+        print(filePath)
         self.resetState()
         self.canvas.setEnabled(False)
         if filePath is None:
@@ -1027,9 +1062,11 @@ class MainWindow(QMainWindow, WindowMixin):
         unicodeFilePath = os.path.abspath(unicodeFilePath)
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
+        currentRow = 0
         if unicodeFilePath and self.fileListWidget.count() > 0:
             if unicodeFilePath in self.mImgList:
                 index = self.mImgList.index(unicodeFilePath)
+                currentRow = index
                 fileWidgetItem = self.fileListWidget.item(index)
                 fileWidgetItem.setSelected(True)
             else:
@@ -1104,7 +1141,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 elif os.path.isfile(txtPath):
                     self.loadYOLOTXTByFilename(txtPath)
 
-            self.setWindowTitle(__appname__ + ' ' + filePath)
+            self.setWindowTitle(f"{__appname__} {filePath} {currentRow}/{len(self.mImgList)}")
 
             # Default : select last item if there is at least one item
             if self.labelList.count():
@@ -1329,7 +1366,6 @@ class MainWindow(QMainWindow, WindowMixin):
             currIndex = self.mImgList.index(self.filePath)
             if currIndex + 1 < len(self.mImgList):
                 filename = self.mImgList[currIndex + 1]
-
         if filename:
             self.loadFile(filename)
 
@@ -1479,7 +1515,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_KITTI)
         tKittiParseReader = KittiReader(txtPath, self.image)
         shapes = tKittiParseReader.getShapes()
-        print (shapes)
         self.loadLabels(shapes)
         self.canvas.verified = tKittiParseReader.verified
     
@@ -1505,7 +1540,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_YOLO)
         tYoloParseReader = YoloReader(txtPath, self.image)
         shapes = tYoloParseReader.getShapes()
-        print (shapes)
         self.loadLabels(shapes)
         self.canvas.verified = tYoloParseReader.verified
 
