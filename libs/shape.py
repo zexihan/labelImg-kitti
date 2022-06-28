@@ -357,6 +357,10 @@ class Shape(object):
         if self.fill_color != Shape.fill_color:
             shape.fill_color = self.fill_color
         shape.difficult = self.difficult
+        shape.rotation = self.rotation
+        shape.currentAngle = self.currentAngle
+        shape.fill_color = self.fill_color
+
         return shape
 
     def __len__(self):
