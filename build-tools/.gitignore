@@ -1,4 +1,5 @@
 *.spec
+!labelImg-win10-qt5.spec
 build
 dist
 pyinstaller
